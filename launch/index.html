@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQ ARENA | Ultra Launch</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon: #00f2ff;
+            --bg: #03080c;
+            --glitch-purple: #ff00ff;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--neon);
+            font-family: 'Orbitron', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        /* 3D Perspective Grid with Glow */
+        body::after {
+            content: "";
+            position: absolute;
+            width: 300%; height: 200%;
+            background-image: linear-gradient(rgba(0, 242, 255, 0.1) 2px, transparent 2px), 
+                              linear-gradient(90deg, rgba(0, 242, 255, 0.1) 2px, transparent 2px);
+            background-size: 60px 60px;
+            transform: perspective(400px) rotateX(60deg);
+            top: -30%;
+            z-index: -1;
+            animation: moveGrid 8s linear infinite;
+        }
+
+        @keyframes moveGrid {
+            0% { transform: perspective(400px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(400px) rotateX(60deg) translateY(60px); }
+        }
+
+        #main-container {
+            width: 85%;
+            max-width: 850px;
+            padding: 50px;
+            border: 1px solid rgba(0, 242, 255, 0.4);
+            background: rgba(2, 10, 18, 0.95);
+            box-shadow: 0 0 80px rgba(0, 242, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanning Laser Effect */
+        .scanner {
+            position: absolute;
+            top: -100%; left: 0;
+            width: 100%; height: 4px;
+            background: var(--neon);
+            box-shadow: 0 0 20px var(--neon);
+            opacity: 0;
+            z-index: 5;
+        }
+
+        .scanning .scanner {
+            animation: scanLine 2s linear infinite;
+            opacity: 1;
+        }
+
+        @keyframes scanLine {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        /* Glitch Animation for Text */
+        .glitch {
+            animation: glitchText 0.3s cubic-bezier(.25,.46,.45,.94) both infinite;
+            text-shadow: 2px 0 var(--glitch-purple), -2px 0 var(--neon);
+        }
+
+        @keyframes glitchText {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        #display-text {
+            font-size: 2.4rem;
+            min-height: 120px;
+            line-height: 1.3;
+            text-transform: uppercase;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .fade-out { opacity: 0; transform: scale(0.95) skewX(10deg); filter: blur(10px); }
+
+        /* Animated Audio Bars */
+        .wave-box {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 10px;
+            height: 100px;
+            margin: 20px 0;
+            visibility: hidden;
+        }
+
+        .wave-box.active { visibility: visible; }
+
+        .bar {
+            width: 10px;
+            background: linear-gradient(to top, var(--neon), var(--glitch-purple));
+            box-shadow: 0 0 15px var(--neon);
+            animation: bounce 0.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes bounce {
+            from { height: 10px; }
+            to { height: 90px; }
+        }
+
+        .launch-btn {
+            background: transparent;
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            padding: 20px 50px;
+            font-family: 'Orbitron';
+            font-weight: 700;
+            letter-spacing: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .launch-btn:hover {
+            background: var(--neon);
+            color: var(--bg);
+            box-shadow: 0 0 50px var(--neon);
+        }
+    </style>
+</head>
+<body class="">
+
+<div id="main-container">
+    <div class="scanner"></div>
+    <div class="terminal-text" id="status" style="font-family: 'Share Tech Mono'; color: rgba(0, 242, 255, 0.5); font-size: 12px; margin-bottom: 20px;">
+        // STATUS: READY_FOR_INJECTION //
+    </div>
+    
+    <div id="display-text">SYSTEM INITIATION REQUIRED</div>
+
+    <div class="wave-box" id="waveBox">
+        <div class="bar" style="animation-delay: 0.1s"></div>
+        <div class="bar" style="animation-delay: 0.3s"></div>
+        <div class="bar" style="animation-delay: 0.5s"></div>
+        <div class="bar" style="animation-delay: 0.2s"></div>
+        <div class="bar" style="animation-delay: 0.4s"></div>
+    </div>
+
+    <button class="launch-btn" id="initBtn" onclick="runInauguration()">START PROTOCOL</button>
+</div>
+
+<script>
+    const display = document.getElementById('display-text');
+    const container = document.getElementById('main-container');
+    const status = document.getElementById('status');
+    const wave = document.getElementById('waveBox');
+    const btn = document.getElementById('initBtn');
+
+    // Audio setup
+    const launchSound = new Audio("launched.mp3");
+
+    const synth = window.speechSynthesis;
+    const SpeechRecognition = window.webkitSpeechRecognition || window.ShareRecognition;
+    const recognition = new SpeechRecognition();
+
+    // Optimize recognition timing
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    function updateTextEffect(newText, isGlitch = false) {
+        display.classList.add('fade-out');
+        
+        setTimeout(() => {
+            display.innerText = newText.toUpperCase();
+            display.classList.remove('fade-out');
+            if(isGlitch) {
+                display.classList.add('glitch');
+                setTimeout(() => display.classList.remove('glitch'), 1000);
+            }
+        }, 350);
+    }
+
+    function speak(text, nextAction) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.pitch = 0.8; 
+        msg.rate = 1.0;
+        msg.onend = nextAction;
+        updateTextEffect(text, text.includes("3. 2. 1."));
+        synth.speak(msg);
+    }
+
+    function runInauguration() {
+        btn.style.display = 'none';
+        container.classList.add('scanning');
+        status.innerText = "// PROTOCOL: GUEST_IDENTIFICATION //";
+        
+        speak("Welcome. Please state your name.", () => {
+            wave.classList.add('active');
+            recognition.start();
+        });
+    }
+
+    recognition.onresult = (event) => {
+        // Stop recognition immediately once result is found
+        recognition.stop();
+        const guestName = event.results[0][0].transcript;
+        wave.classList.remove('active');
+        container.classList.remove('scanning');
+        status.innerText = "// ACCESS_GRANTED: " + guestName.toUpperCase() + " //";
+
+        // Snappy transitions
+        setTimeout(() => {
+            speak(`Hello ${guestName}. I am IQ Arena. I have been engineered to build students strongly and powerfully.`, () => {
+                setTimeout(() => {
+                    speak("I am now synchronizing with the NSCE T servers to provide real-time learning and competitive excellence. Welcome to the IQ Arena.", () => {
+                        setTimeout(() => {
+                            speak("Launch in 3. 2. 1. Deployed.", () => {
+                                // Trigger sound effect
+                                launchSound.play();
+                                document.body.style.background = "#fff";
+                                setTimeout(() => {
+                                    window.location.href = "https://nscet.org/iqarena/";
+                                }, 200);
+                            });
+                        }, 500);
+                    });
+                }, 400);
+            });
+        }, 400);
+    };
+
+    recognition.onerror = () => {
+        window.location.href = "https://nscet.org/iqarena/";
+    };
+</script>
+
+</body>
+</html>
